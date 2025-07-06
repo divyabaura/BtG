@@ -13,23 +13,16 @@ public class BtGMappings {
     private static final Pattern WHERE_PATTERN = Pattern.compile(
             "\\bWHERE\\b", Pattern.CASE_INSENSITIVE
     );
-    private static final String AUDIT_LOG_HEADER = "user_id,roles,justification,timestamp\n";
 
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
-
+        
         System.out.print("Enter path for mapping file with all policies: ");
         String allPoliciesPath = scanner.nextLine();
-
+        
         System.out.print("Enter path for mapping file with BtG policies: ");
         String btgPath = scanner.nextLine();
-
-        System.out.print("Enter path for justification audit log file: ");
-        String auditLogPath = scanner.nextLine();
-
-        // Create/initialize audit log
-        initializeAuditLog(auditLogPath);
-
+        
         // Input for authorized users
         Map<String, String> userRoles = new HashMap<>();
         System.out.println("\nEnter authorized users for BtG access (format: user_id=role, empty line to finish):");
@@ -37,7 +30,7 @@ public class BtGMappings {
             System.out.print("> ");
             String input = scanner.nextLine().trim();
             if (input.isEmpty()) break;
-
+            
             String[] parts = input.split("=");
             if (parts.length == 2) {
                 userRoles.put(parts[0].trim(), parts[1].trim());
@@ -54,13 +47,6 @@ public class BtGMappings {
         String combinedMappings = combineMappingsWithRoles(mappingFiles);
         Files.write(Paths.get(outputPath), combinedMappings.getBytes(StandardCharsets.UTF_8));
         System.out.println("\nBreak the Glass mapping file created at: " + outputPath);
-    }
-
-    private static void initializeAuditLog(String auditLogPath) throws IOException {
-        Path path = Paths.get(auditLogPath);
-        if (!Files.exists(path)) {
-            Files.write(path, AUDIT_LOG_HEADER.getBytes(StandardCharsets.UTF_8));
-        }
     }
 
     private static String combineMappingsWithRoles(List<MappingFile> mappingFiles) throws IOException {
@@ -112,7 +98,7 @@ public class BtGMappings {
         List<String> mappings = new ArrayList<>();
         int collectionStart = content.indexOf("@collection [[") + "@collection [[".length();
 
-        if (collectionStart < "@collection [[".length())
+        if (collectionStart < "@collection [[".length()) 
             return mappings;
 
         String mappingSection = content.substring(collectionStart, content.lastIndexOf("]]"));
@@ -153,13 +139,13 @@ public class BtGMappings {
         // Build user-specific conditions using ontop_user(user_id) format
         String userConditions = userRoles.entrySet().stream()
                 .map(entry -> String.format(
-                        "(ontop_user('%s') AND ontop_contains_role('%s')",
+                        "(ontop_user('%s') AND ontop_contains_role('%s')", 
                         entry.getKey(), entry.getValue()))
                 .collect(Collectors.joining(" OR "));
-
+        
         // Wrap conditions in parentheses
         String fullCondition = "(" + userConditions + ")";
-
+        
         String trimmedSource = source.trim();
         if (WHERE_PATTERN.matcher(trimmedSource).find()) {
             return trimmedSource + " AND " + fullCondition;
