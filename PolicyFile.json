@@ -1,0 +1,15 @@
+[
+  "Q() :- Patient.gender(x), Patient.address(x, y) .",
+  "Q() :- MedicationStatement.subject(x, y), link(x, y) .",
+  "Q() :- Patient.gender(x, y), Patient.address(x, z) .",
+  "Q() :- MedicationStatement.subject(x, y), link(y, z) .",
+  "Q() :- Patient_id(x), Patient.generalPractitioner(x, y) .",
+  "Q() :- Condition.subject(x, y), link(y, z) .",
+  "Q() :- Procedure.code(x, y), Procedure.performedDateTime(x, z) .",
+  "Q() :- Observation.valueQuantity(x, y), Quantity.value(y, z), value(z, v) .",
+  "Q() :- Practitioner.qualification(x, y), Practitioner.qualification.code(y, z) .",
+  "Q() :- Encounter.type(x, y), Encounter.status(x, z) .",
+  "Q() :- Location.name(x, y), Location.address(x, z) .",
+  "Q() :- Practitioner.birthDate(x, y), Practitioner.identifier(x, z), Practitioner.qualification(x, w) .",
+  "Q() :- Procedure.status(x, y), Procedure.encounter(x, u) ."
+]
