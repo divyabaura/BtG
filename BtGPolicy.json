@@ -1,0 +1,6 @@
+[
+ "Q() :- Patient.gender(x, y), Patient.address(x, z) .",
+ "Q() :- Patient.gender(x), Patient.address(x, y) .",
+ "Q() :- Practitioner.birthDate(x, y), Practitioner.identifier(x, z), Practitioner.qualification(x, w) .",
+ "Q() :- Practitioner.qualification(x, y), Practitioner.qualification.code(y, z) ."
+]
