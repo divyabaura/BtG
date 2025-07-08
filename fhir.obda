@@ -1,0 +1,93 @@
+[PrefixDeclaration]
+:		http://hl7.org/fhir/
+cs:		http://hl7.org/orim/codesystem/
+dc:		http://purl.org/dc/elements/1.1/
+dt:		http://hl7.org/orim/datatype/
+ex:		http://hl7.org/fhir/StructureDefinition/
+vs:		http://hl7.org/orim/valueset/
+w5:		http://hl7.org/fhir/w5#
+owl:		http://www.w3.org/2002/07/owl#
+rdf:		http://www.w3.org/1999/02/22-rdf-syntax-ns#
+rim:		http://hl7.org/owl/rim/
+xml:		http://www.w3.org/XML/1998/namespace
+xsd:		http://www.w3.org/2001/XMLSchema#
+fhir:		http://hl7.org/fhir/
+obda:		https://w3id.org/obda/vocabulary#
+rdfs:		http://www.w3.org/2000/01/rdf-schema#
+loinc:		http://loinc.org/rdf#
+dcterms:		http://purl.org/dc/terms/
+fhir-vs:		http://hl7.org/fhir/ValueSet/
+
+[MappingDeclaration] @collection [[
+mappingId	mapping1
+target		:Patient/{person_id} a :Patient ; :Resource.id :Patient/{person_id}/Resource.id ; :Patient.gender :Patient/{person_id}/Patient.gender ; :Patient.birthDate :Patient/{person_id}/Patient.birthDate ; :Patient.address :Location/{location_id}/Location.address ; :Patient.generalPractitioner :Patient/{person_id}/Patient.generalPractitioner . :Patient/{person_id}/Resource.id :value {person_id}^^xsd:string . :Patient/{person_id}/Patient.gender :value {gender}^^xsd:string . :Patient/{person_id}/Patient.birthDate :value {birth_date}^^xsd:date . :Patient/{person_id}/Patient.generalPractitioner :link :Practitioner/{provider_id} , :PractitionerRole/{provider_id} . 
+source		SELECT person.*, make_date(
+			CASE WHEN person.year_of_birth IS NULL THEN 1 ELSE year_of_birth END,
+			CASE WHEN person.month_of_birth IS NULL THEN 1 ELSE month_of_birth END,
+			CASE WHEN person.day_of_birth IS NULL THEN 1 ELSE day_of_birth END) AS birth_date,
+			LOWER(concept_name) AS gender FROM person, concept
+			WHERE person.gender_concept_id = concept.concept_id
+
+mappingId	mapping2
+target		:Practitioner/{provider_id} a :Practitioner ; :Resource.id :Practitioner/{provider_id}/Resource.id ; :Practitioner.identifier :Practitioner/{provider_id}/Practitioner.identifier ; :Practitioner.name :Practitioner/{provider_id}/Practitioner.name ; :Practitioner.birthDate :Practitioner/{provider_id}/Practitioner.birthDate ; :Practitioner.qualification :Practitioner/{provider_id}/Practitioner.qualification . :Practitioner/{provider_id}/Resource.id :value {provider_id}^^xsd:string . :Practitioner/{provider_id}/Practitioner.identifier :value {npi}^^xsd:string . :Practitioner/{provider_id}/Practitioner.name :value {provider_name}^^xsd:string . :Practitioner/{provider_id}/Practitioner.birthDate :value {birth_date}^^xsd:string . :Practitioner/{provider_id}/Practitioner.qualification :Practitioner.qualification.identifier :Practitioner/{provider_id}/Practitioner.qualification/Practitioner.qualification.identifier . :Practitioner/{provider_id}/Practitioner.qualification/Practitioner.qualification.identifier :Identifier.value :Practitioner/{provider_id}/Practitioner.qualification/Practitioner.qualification.identifier/Identifier.value . :Practitioner/{provider_id}/Practitioner.qualification/Practitioner.qualification.identifier/Identifier.value :value {dea}^^xsd:string . 
+source		SELECT *, make_date(year_of_birth, 1, 1) AS birth_date FROM provider
+
+mappingId	mapping3
+target		:Practitioner/{provider_id} :Practitioner.gender :Practitioner/{provider_id}/Practitioner.gender . :Practitioner/{provider_id}/Practitioner.gender :value {gender}^^xsd:string . 
+source		SELECT provider.*, LOWER(concept_name) AS gender FROM provider, concept
+			WHERE provider.gender_concept_id = concept.concept_id
+
+mappingId	mapping4
+target		:PractitionerRole/{provider_id} a :PractitionerRole ; :Resource.id :PractitionerRole/{provider_id}/Resource.id ; :PractitionerRole.specialty :CodeableConcept/{specialty_concept_id} ; :PractitionerRole.location :Location/{care_site_id} ; :PractitionerRole.practitioner :Practitioner/{provider_id} . :PractitionerRole/{provider_id}/Resource.id :value {provider_id}^^xsd:string . 
+source		SELECT * FROM provider
+
+mappingId	mapping5
+target		:Location/{care_site_id} a :Location ; :Resource.id :Location/{care_site_id}/Resource.id ; :Location.name :Location/{care_site_id}/Location.name ; :Location.type :CodeableConcept/{place_of_service_concept_id} ; :Location.address :Location/{location_id}/Address . :Location/{care_site_id}/Resource.id :value {care_site_id}^^xsd:string . :Location/{care_site_id}/Location.name :value {care_site_name}^^xsd:string . 
+source		SELECT * FROM care_site
+
+mappingId	mapping6
+target		:Location/{location_id} a :Location ; :Resource.id :Location/{location_id}/Resource.id ; :Location.address :Location/{location_id}/Location.address . :Location/{location_id}/Resource.id :value {location_id}^^xsd:string . :Location/{location_id}/Location.address a :Address ; :Address.line :Location/{location_id}/Location.address/Address.line ; :Address.city :Location/{location_id}/Location.address/Address.city ; :Address.state :Location/{location_id}/Location.address/Address.state ; :Address.postalCode :Location/{location_id}/Location.address/Address.postalCode ; :Address.country :Location/{location_id}/Location.address/Address.country . :Location/{location_id}/Location.address/Address.line :value {address_1}^^xsd:string , {address_2}^^xsd:string . :Location/{location_id}/Location.address/Address.city :value {city}^^xsd:string . :Location/{location_id}/Location.address/Address.state :value {state}^^xsd:string . :Location/{location_id}/Location.address/Address.postalCode :value {zip}^^xsd:string . :Location/{location_id}/Location.address/Address.country :value {county}^^xsd:string . 
+source		SELECT * FROM location
+
+mappingId	mapping7
+target		:Encounter/{visit_occurrence_id} a :Encounter ; :Resource.id :Encounter/{visit_occurrence_id}/Resource.id ; :Encounter.status :Encounter/{visit_occurrence_id}/Encounter.status ; :Encounter.type :CodeableConcept/{visit_concept_id} ; :Encounter.class :CodeableConcept/{visit_type_concept_id} ; :Encounter.subject :Encounter/{visit_occurrence_id}/Encounter.subject ; :Encounter.period :Encounter/{visit_occurrence_id}/Encounter.period ; :Encounter.performer :Encounter/{visit_occurrence_id}/Encounter.performer ; :Encounter.partOf :Encounter/{visit_occurrence_id}/Encounter.partOf . :Encounter/{visit_occurrence_id}/Resource.id :value {visit_occurrence_id}^^xsd:string . :Encounter/{visit_occurrence_id}/Encounter.status :value "finished"^^xsd:string . :Encounter/{visit_occurrence_id}/Encounter.subject :link :Patient/{person_id} . :Encounter/{visit_occurrence_id}/Encounter.period :Period.start :Encounter/{visit_occurrence_id}/Encounter.period/Period.start ; :Period.end :Encounter/{visit_occurrence_id}/Encounter.period/Period.end . :Encounter/{visit_occurrence_id}/Encounter.period/Period.start :value {visit_start_datetime}^^xsd:dateTime . :Encounter/{visit_occurrence_id}/Encounter.period/Period.end :value {visit_end_datetime}^^xsd:dateTime . :Encounter/{visit_occurrence_id}/Encounter.performer :link :Practitioner/{provider_id} . :Encounter/{visit_occurrence_id}/Encounter.partOf :link :Encounter/{preceding_visit_occurrence_id} . 
+source		SELECT * FROM visit_occurrence
+
+mappingId	mapping8
+target		:Condition/{condition_occurrence_id} a :Condition ; :Resource.id :Condition/{condition_occurrence_id}/Resource.id ; :Condition.code :CodeableConcept/{condition_concept_id} ; :Condition.category :CodeableConcept/{condition_type_concept_id} ; :Condition.subject :Condition/{condition_occurrence_id}/Condition.subject ; :Condition.encounter :Condition/{condition_occurrence_id}/Condition.encounter ; :Condition.onsetDateTime :Condition/{condition_occurrence_id}/Condition.onsetDateTime ; :Condition.abatementDateTime :Condition/{condition_occurrence_id}/Condition.abatementDateTime ; :Condition.asserter :Condition/{condition_occurrence_id}/Condition.asserter . :Condition/{condition_occurrence_id}/Resource.id :value {condition_occurrence_id}^^xsd:string . :Condition/{condition_occurrence_id}/Condition.subject :link :Patient/{person_id} . :Condition/{condition_occurrence_id}/Condition.encounter :link :Encounter/{visit_occurrence_id} . :Condition/{condition_occurrence_id}/Condition.onsetDateTime :value {condition_start_datetime}^^xsd:dateTime . :Condition/{condition_occurrence_id}/Condition.abatementDateTime :value {condition_end_datetime}^^xsd:dateTime . :Condition/{condition_occurrence_id}/Condition.asserter :link :Practitioner/{provider_id} . 
+source		SELECT * FROM condition_occurrence
+
+mappingId	mapping9
+target		:Condition/{condition_occurrence_id} a :Condition ; :Condition.clinicalStatus :Condition/{condition_occurrence_id}/Condition.clinicalStatus . :Condition/{condition_occurrence_id}/Condition.clinicalStatus :value {clinicalStatus}^^xsd:string . 
+source		SELECT condition_occurrence.*, LOWER(concept_name) AS clinicalStatus FROM condition_occurrence, concept
+			WHERE condition_occurrence.condition_status_concept_id = concept.concept_id
+
+mappingId	mapping10
+target		:Procedure/{procedure_occurrence_id} a :Procedure ; :Resource.id :Procedure/{procedure_occurrence_id}/Resource.id ; :Procedure.code :CodeableConcept/{procedure_concept_id} ; :Procedure.category :CodeableConcept/{procedure_type_concept_id} ; :Procedure.subject :Procedure/{procedure_occurrence_id}/Procedure.subject ; :Procedure.encounter :Procedure/{procedure_occurrence_id}/Procedure.encounter ; :Procedure.performedDateTime :Procedure/{procedure_occurrence_id}/Procedure.performedDateTime ; :Procedure.performer :Procedure/{procedure_occurrence_id}/Procedure.performer . :Procedure/{procedure_occurrence_id}/Resource.id :value {procedure_occurrence_id}^^xsd:string . :Procedure/{procedure_occurrence_id}/Procedure.subject :link :Patient/{person_id} . :Procedure/{procedure_occurrence_id}/Procedure.encounter :link :Encounter/{visit_occurrence_id} . :Procedure/{procedure_occurrence_id}/Procedure.performedDateTime :value {procedure_datetime}^^xsd:dateTime . :Procedure/{procedure_occurrence_id}/Procedure.performer :link :Practitioner/{provider_id} . 
+source		SELECT * FROM procedure_occurrence
+
+mappingId	mapping11
+target		:MedicationStatement/{drug_exposure_id} a :MedicationStatement ; :Resource.id :MedicationStatement/{drug_exposure_id}/Resource.id ; :MedicationStatement.status :MedicationStatement/{drug_exposure_id}/MedicationStatement.status ; :MedicationStatement.statusReason :MedicationStatement/{drug_exposure_id}/MedicationStatement.statusReason ; :MedicationStatement.medicationCodeableConcept :CodeableConcept/{drug_concept_id} ; :MedicationStatement.category :CodeableConcept/{drug_type_concept_id} ; :MedicationStatement.subject :MedicationStatement/{drug_exposure_id}/MedicationStatement.subject ; :MedicationStatement.context :Encounter/{visit_occurrence_id} ; :MedicationStatement.effectiveDateTime :MedicationStatement/{drug_exposure_id}/MedicationStatement.effectiveDateTime ; :MedicationStatement.effectivePeriod :MedicationStatement/{drug_exposure_id}/MedicationStatement.effectivePeriod . :MedicationStatement/{drug_exposure_id}/Resource.id :value {drug_exposure_id}^^xsd:string . :MedicationStatement/{drug_exposure_id}/MedicationStatement.status :value "completed"^^xsd:string . :MedicationStatement/{drug_exposure_id}/MedicationStatement.statusReason :value {stop_reason}^^xsd:string . :MedicationStatement/{drug_exposure_id}/MedicationStatement.subject :link :Patient/{person_id} . :MedicationStatement/{drug_exposure_id}/MedicationStatement.effectiveDateTime :value {drug_exposure_start_datetime}^^xsd:dateTime . :MedicationStatement/{drug_exposure_id}/MedicationStatement.effectivePeriod :Period.start :MedicationStatement/{drug_exposure_id}/MedicationStatement.effectivePeriod/Period.start ; :Period.end :MedicationStatement/{drug_exposure_id}/MedicationStatement.effectivePeriod/Period.end . :MedicationStatement/{drug_exposure_id}/MedicationStatement.effectivePeriod/Period.start :value {drug_exposure_start_datetime}^^xsd:dateTime . :MedicationStatement/{drug_exposure_id}/MedicationStatement.effectivePeriod/Period.end :value {drug_exposure_end_datetime}^^xsd:dateTime . 
+source		SELECT * FROM drug_exposure
+
+mappingId	mapping12
+target		:Observation/{measurement_id} a :Observation ; :Resource.id :Observation/{measurement_id}/Resource.id ; :Observation.status :Observation/{measurement_id}/Observation.status ; :Observation.code :CodeableConcept/{measurement_concept_id} ; :Observation.category :CodeableConcept/{measurement_type_concept_id} ; :Observation.subject :Observation/{measurement_id}/Observation.subject ; :Observation.encounter :Observation/{measurement_id}/Observation.encounter ; :Observation.effectiveDateTime :Observation/{measurement_id}/Observation.effectiveDateTime ; :Observation.effectivePeriod :Observation/{measurement_id}/Observation.effectivePeriod ; :Observation.valueCodeableConcept :CodeableConcept/{value_as_concept_id} ; :Observation.valueString :Observation/{measurement_id}/Observation.valueString ; :Observation.referenceRange :Observation/{measurement_id}/Observation.referenceRange ; :Observation.performer :Observation/{measurement_id}/Observation.performer . :Observation/{measurement_id}/Resource.id :value {measurement_id}^^xsd:string . :Observation/{measurement_id}/Observation.status :value "final"^^xsd:string . :Observation/{measurement_id}/Observation.subject :link :Patient/{person_id} . :Observation/{measurement_id}/Observation.encounter :link :Encounter/{visit_occurrence_id} . :Observation/{measurement_id}/Observation.effectiveDateTime :value {measurement_datetime}^^xsd:dateTime . :Observation/{measurement_id}/Observation.effectivePeriod :Period.start :Observation/{measurement_id}/Observation.effectivePeriod/Period.start . :Observation/{measurement_id}/Observation.effectivePeriod/Period.start :value {measurement_datetime}^^xsd:dateTime . :Observation/{measurement_id}/Observation.valueString :value {value_as_number}^^xsd:string . :Observation/{measurement_id}/Observation.referenceRange :Observation.referenceRange.low :Observation/{measurement_id}/Observation.referenceRange/Observation.referenceRange.low ; :Observation.referenceRange.high :Observation/{measurement_id}/Observation.referenceRange/Observation.referenceRange.high . :Observation/{measurement_id}/Observation.referenceRange/Observation.referenceRange.low :value {range_low}^^xsd:string . :Observation/{measurement_id}/Observation.referenceRange/Observation.referenceRange.high :value {range_high}^^xsd:string . :Observation/{measurement_id}/Observation.performer :link :Practitioner/{provider_id} . 
+source		SELECT * FROM measurement
+
+mappingId	mapping13
+target		:Observation/{measurement_id} :Observation.valueQuantity :Observation/{measurement_id}/Observation.valueQuantity . :Observation/{measurement_id}/Observation.valueQuantity :Quantity.value :Observation/{measurement_id}/Observation.valueQuantity/Quantity.value ; :Quantity.unit :Observation/{measurement_id}/Observation.valueQuantity/Quantity.unit . :Observation/{measurement_id}/Observation.valueQuantity/Quantity.value :value {value_as_number}^^xsd:decimal . :Observation/{measurement_id}/Observation.valueQuantity/Quantity.unit :value {measurement_unit}^^xsd:string . 
+source		SELECT measurement.*, concept_name AS measurement_unit FROM measurement, concept
+			WHERE measurement.unit_concept_id = concept.concept_id
+
+mappingId	mapping14
+target		:CodeableConcept/{concept_id} a :CodeableConcept ; :CodeableConcept.coding :CodeableConcept/{concept_id}/CodeableConcept.coding ; :CodeableConcept.text :CodeableConcept/{concept_id}/CodeableConcept.text . :CodeableConcept/{concept_id}/CodeableConcept.coding a :Coding ; :Coding.code :CodeableConcept/{concept_id}/CodeableConcept.coding/Coding.code ; :Coding.display :CodeableConcept/{concept_id}/CodeableConcept.coding/Coding.display ; :Coding.system :CodeableConcept/{concept_id}/CodeableConcept.coding/Coding.system . :CodeableConcept/{concept_id}/CodeableConcept.coding/Coding.code :value {concept_code}^^xsd:string . :CodeableConcept/{concept_id}/CodeableConcept.coding/Coding.display :value {concept_name}^^xsd:string . :CodeableConcept/{concept_id}/CodeableConcept.coding/Coding.system :value {vocabulary_id}^^xsd:string . :CodeableConcept/{concept_id}/CodeableConcept.text :value {concept_name}^^xsd:string . 
+source		SELECT * FROM concept
+
+mappingId	mapping15
+target		:ConceptMap/relations/{concept_id_1}/{concept_id_2} a :ConceptMap ; :Resource.id :ConceptMap/relations/{concept_id_1}/{concept_id_2}/Resource.id ; :ConceptMap.sourceUri :CodeableConcept/{concept_id_1} ; :ConceptMap.targetUri :CodeableConcept/{concept_id_2} ; :ConceptMap.group.source :CodeableConcept/{concept_id_1} ; :ConceptMap.group.target :CodeableConcept/{concept_id_2} ; :ConceptMap.group.element.target.equivalence :ConceptMap/relations/{concept_id_1}/{concept_id_2}/ConceptMap.group.element.target.equivalence . :ConceptMap/relations/{concept_id_1}/{concept_id_2}/Resource.id :value "{concept_id_1}-{concept_id_2}"^^xsd:string . :ConceptMap/relations/{concept_id_1}/{concept_id_2}/ConceptMap.group.element.target.equivalence :value {relationship_id}^^xsd:string . 
+source		SELECT * FROM concept_relationship
+
+mappingId	mapping16
+target		:ConceptMap/ancestors/{ancestor_concept_id}/{descendant_concept_id} a :ConceptMap ; :Resource.id :ConceptMap/ancestors/{ancestor_concept_id}/{descendant_concept_id}/Resource.id ; :ConceptMap.sourceUri :CodeableConcept/{ancestor_concept_id} ; :ConceptMap.targetUri :CodeableConcept/{descendant_concept_id} ; :ConceptMap.group.source :CodeableConcept/{ancestor_concept_id} ; :ConceptMap.group.target :CodeableConcept/{descendant_concept_id} ; :ConceptMap.group.element.target.equivalence :ConceptMap/ancestors/{ancestor_concept_id}/{descendant_concept_id}/ConceptMap.group.element.target.equivalence . :ConceptMap/ancestors/{ancestor_concept_id}/{descendant_concept_id}/Resource.id :value "{ancestor_concept_id}-{descendant_concept_id}"^^xsd:string . 
+source		SELECT * FROM concept_ancestor
+]]
