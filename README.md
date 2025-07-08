@@ -12,7 +12,7 @@ This toolkit enables that by:
 
 - Merging multiple OBDA mapping files (standard + BtG-specific)
 - Applying role- and ID-based access filters only on BtG-sensitive mappings
-- Enforcing runtime access control via a policy-aware query executor
+- Enforcing runtime access control via a policy-protected query executor
 - Supporting both full and partial policies using JSON policy files
 
 ---
@@ -29,31 +29,79 @@ This toolkit enables that by:
 │ └── policies.md # Optional description of policies
 
 
----
 
-## ⚙️ Workflow
+## 🔄 Workflow: Break-the-Glass (BtG) Mapping Integration
 
-### 1. PPOBDA Conversion (Optional)
-
-If your original OBDA mappings need to be policy-aware, use the PPOBDA extension from the following repository:
-
-🔗 [PPOBDA-with-Ontop](https://github.com/divyabaura/PPOBDA-with-Ontop)
-
-This allows embedding access control directly into OBDA mappings based on JSON policy files.
+This workflow explains how to generate and execute OBDA mappings with embedded **Break-the-Glass (BtG)** access control.
 
 ---
 
-### 2. BtG Mapping Combination
+### 1️⃣ Prepare Policy-Embedded OBDA Mappings
 
-Run `BtGMappings.java` to combine:
+Use the PPOBDA framework to generate OBDA mappings with embedded access policies:
 
-- A full OBDA file (`all-policies.obda`)
-- A BtG-specific OBDA file (`btg-policies.obda`)
-- A set of authorized users and their roles
+🔗 Refer to: [https://github.com/divyabaura/PPOBDA-with-Ontop](https://github.com/divyabaura/PPOBDA-with-Ontop)
 
-Only the BtG mappings are modified with user-role conditional filters:
+You need to generate two sets of mappings:
+
+- `all-policies.obda` → Mappings with **all** access control policies (using `PolicyFile.json`)
+- `btg-policies.obda` → Mappings with **only BtG** policies (using `BtGPolicy.json`)
+
+These mappings reflect different access levels:
+- Regular mappings enforce full policy constraints.
+- BtG mappings contain rules for emergency override access.
+
+---
+
+### 2️⃣ Combine Mappings with User-Based BtG Conditions
+
+Use the `BtGMapping.java` utility provided in this repository to combine the two mappings.
+
+**Inputs:**
+
+- `all-policies.obda` – Original, complete mapping
+- `btg-policies.obda` – Break-the-Glass subset
+- List of users and roles (e.g., `D_ID101` to `D_ID1200` with role `EmergencyDoctors`)
+
+**Behavior:**
+
+- The tool embeds conditional clauses **only into BtG mappings**
+- These clauses enforce BtG access based on:
+  - User ID
+  - Role
+  - Presence of justification
+
+✅ Regular mappings remain untouched  
+✅ BtG mappings gain `WHERE` clauses such as:
 
 ```sql
-WHERE (ontop_user('D_ID101') AND ontop_contains_role('EmergencyDoctors'))
+WHERE ontop_user('D_ID101') AND ontop_contains_role('EmergencyDoctors')
+```
+
+**Output:**
+- `BtGmappings.obda` – Final mapping file with conditional emergency access logic
+
+---
+
+### 3️⃣ Execute Queries Under BtG Conditions
+
+Use `BtGExecutor.java` to simulate query execution under BtG scenarios.
+
+**Functionality:**
+
+- Checks if the user is eligible for BtG access:
+  - User ID is in allowed range (e.g., `D_ID101–D_ID1200`)
+  - User role matches (`EmergencyDoctors`)
+  - Justification is provided
+- If BtG access is valid, it uses `BtGmappings.obda` to answer queries
+- Otherwise, defaults to restricted `all-policies.obda`
+
+This ensures sensitive data is accessed only under tightly controlled and auditable emergency conditions.
+
+---
+
+✅ This workflow mimics how emergency access would be safely controlled in real-world systems like healthcare databases.
+
+
 
 
