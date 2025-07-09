@@ -42,6 +42,13 @@ Use the PPOBDA framework to generate OBDA mappings with embedded access policies
 
 🔗 Refer to: [https://github.com/divyabaura/PPOBDA-with-Ontop](https://github.com/divyabaura/PPOBDA-with-Ontop)
 
+Input will be OBDA specification:
+- Relevant fragments of the FHIR Ontology (included in fhir.ttl)
+- Refer to FHIROntopOMOP for mappings (included in fhir.obda).
+- Relevant set of policy (PolicyFile.json or BtGPolicy.json)
+- The MIMIC-III dataset can be accessed via this course.
+- Note: Access is subject to privacy regulations.
+
 You need to generate two sets of mappings:
 
 - `all-policies.obda` → Mappings with **all** access control policies (using `PolicyFile.json`)
